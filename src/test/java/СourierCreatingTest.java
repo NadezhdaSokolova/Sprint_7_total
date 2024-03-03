@@ -1,14 +1,14 @@
+import io.qameta.allure.Description;
 import io.qameta.allure.Step;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.equalTo;
 
 
 public class СourierCreatingTest {
-
     String login = "Nadezhda42" + Math.random();
     String password = "qwerty1232" + Math.random();
 
@@ -18,83 +18,72 @@ public class СourierCreatingTest {
         RestAssured.baseURI = "https://qa-scooter.praktikum-services.ru/";
     }
 
-    @Test
+    @After
 
-    @Step("Check that possible to create of courier with correct data")
-    public void checkSuccessfullyCreationOfCourier() {
+    public void deleteTestCourierSuccessWithoutDots(){
+        CouriersPOJO courier = new CouriersPOJO(login,password,null);
 
-        CouriersPOJO courier = new CouriersPOJO(login,password,"Надежда");
+        try  {
+            CourierApi.loginCourier(courier);
 
-        Response response = given()
-                .header("Content-type", "application/json")
-                .body(courier)
-                .post("/api/v1/courier");
-        response.then().statusCode(201)
-                .and()
-                .body("ok", equalTo(true));
+            String id = CourierApi.loginCourier(courier).body().asString();
+            String[] split = id.split(":");
+            String idOfCourier = split[1].substring(0, split[1].length() - 1);
+            System.out.println(idOfCourier);
+
+            CourierApi.deleteCourier(courier, idOfCourier);
+        }
+        catch (Exception e){
+            System.out.println ("Удалять нечего. Пользователь не прошел авторизацию.");
+        }
 
     }
-    @Test
 
-    @Step("Check that impossible to create of courier without an login")
+
+    @Test
+    @Description("Check that possible to create of courier with correct data")
+    public void checkSuccessfullyCreationOfCourier() {
+        CouriersPOJO courier = new CouriersPOJO(login,password,"Надежда");
+
+        CourierApi.createCourier(courier).then().statusCode(201)
+                .and()
+                .body("ok", equalTo(true));
+    }
+    @Test
+    @Description("Check that impossible to create of courier without an login")
     public void checkFailedWithoutLogin() {
 
         CouriersPOJO courier = new CouriersPOJO(null,password,"Надежда");
 
-        Response response = given()
-                .header("Content-type", "application/json")
-                .body(courier)
-                .post("/api/v1/courier");
-        response.then().statusCode(400)
+        CourierApi.createCourier(courier).then().statusCode(400)
                 .and()
                 .body("message", equalTo("Недостаточно данных для создания учетной записи"));
     }
 
     @Test
-
-    @Step("Check that impossible to create of courier without an password")
+    @Description("Check that impossible to create of courier without an password")
     public void checkFailedWithoutPassword() {
 
         CouriersPOJO courier = new CouriersPOJO(login,null,"Надежда");
 
-        Response response = given()
-                .header("Content-type", "application/json")
-                .body(courier)
-                .post("/api/v1/courier");
-        response.then().statusCode(400)
+        CourierApi.createCourier(courier).then().statusCode(400)
                 .and()
                 .body("message", equalTo("Недостаточно данных для создания учетной записи"));
     }
 
     @Test
-
-    @Step("Check that impossible to create of courier is system already contains user with same data")
+    @Description("Check that impossible to create of courier is system already contains user with same data")
     public void checkFailedWithExistLogin() {
         //создадим пользователя
         String login1 = "Nadezhda44";
 
-        CouriersPOJO courier1 = new CouriersPOJO(login1,password,"Надежда");
-
-        Response response1 = given()
-                .header("Content-type", "application/json")
-                .body(courier1)
-                .post("/api/v1/courier");
-
-        // попытаемся создать с таким же логином
-
         CouriersPOJO courier = new CouriersPOJO(login1,password,"Надежда");
 
-        Response response = given()
-                .header("Content-type", "application/json")
-                .body(courier)
-                .post("/api/v1/courier");
-        response.then().statusCode(409)
+        CourierApi.createCourier(courier).then().statusCode(409)
                 .and()
                 .body("message", equalTo("Этот логин уже используется"));
 
-
     }
-
 
 
 }

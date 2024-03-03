@@ -1,12 +1,10 @@
+import io.qameta.allure.Description;
 import io.qameta.allure.Step;
 import io.restassured.RestAssured;
-import io.restassured.response.Response;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.notNullValue;
 
 @RunWith(Parameterized.class)
@@ -54,17 +52,11 @@ public class OrderCreatingTest {
     }
 
     @Test
-
-    @Step("Check that possible to create orders with correct data")
-
+    @Description("Check that possible to create orders with correct data")
     public void checkPossibilityToCreateOrderCorrectly(){
         OrderPoJO order = new OrderPoJO (firstName,lastName,address,metroStation, phone, rentTime, deliveryDate, comment, color);
 
-        Response response = given()
-                .header("Content-type", "application/json")
-                .body(order)
-                .post("/api/v1/orders");
-        response.then().statusCode(201)
+        OrderApi.createOrder(order).then().statusCode(201)
                 .and()
                 .assertThat().body("track", notNullValue());;
     }

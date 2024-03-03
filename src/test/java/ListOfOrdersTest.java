@@ -1,3 +1,4 @@
+import io.qameta.allure.Description;
 import io.qameta.allure.Step;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
@@ -14,12 +15,10 @@ public class ListOfOrdersTest {
     }
 
     @Test
-
-    @Step("Check that possible to take access to the all orders in the system")
+    @Description("Check that possible to take access to the all orders in the system")
     public void checkListOfOrdersReturnsCorrectly(){
-        Response response = given()
-                .get("/api/v1/orders");
-        response.then().statusCode(200)
+
+        OrderApi.getListOfOrders().then().statusCode(200)
                 .and()
                 .assertThat().body("orders", notNullValue());
     }
